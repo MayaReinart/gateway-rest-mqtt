@@ -3,17 +3,20 @@ import sys
 import getopt
 import asyncio
 from aiohttp import web
+import asyncio_mqtt
 import logging
 import typing
 
 routes = web.RouteTableDef()
 
 
-async def mqtt_connect(mqtt_address: str):
-    ...
+async def mqtt_connect(mqtt_address: str) -> asyncio_mqtt.Client:
+    mqtt_client = asyncio_mqtt.Client(mqtt_address)
+    await mqtt_client.subscribe('system/+/out/#')
+    return mqtt_client
 
 
-async def mqtt_receive_report(mqtt_client):
+async def mqtt_receive_report(mqtt_client: asyncio_mqtt.Client):
     ...
 
 
