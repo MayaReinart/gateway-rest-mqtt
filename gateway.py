@@ -20,6 +20,13 @@ async def mqtt_receive_report(mqtt_client: asyncio_mqtt.Client):
     ...
 
 
+@routes.get('/{device_id}/app/command')
+async def process_request(request: str) -> web.Response:
+    logging.info(f'Received request: {request}')
+    ...
+    return web.Response()
+
+
 async def init():
     mqtt_address = 'localhost:1883/'
     log_file_name = None
