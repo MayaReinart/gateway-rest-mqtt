@@ -22,14 +22,16 @@ async def mqtt_receive_report(mqtt_client: asyncio_mqtt.Client):
 
 @routes.get('/{device_id}/app/command')
 async def process_request(request: str) -> web.Response:
-    logging.info(f'Received request: {request}')
+    command = await request.text()
+    logging.info(f'Received command: {command}')
     app = request.app
 
     if device_id not in app['requests']:
         command_topic = f'system/{device_id}/app/command'
         future = asyncio.Future()
         app['requests'][device_id] = future
-        await app['mqtt_client'].publish(command_topic, payload=request.encode())
+        await app['mqtt_client'].publish(command_topic, payload=command)
+
         result = await asyncio.wait(future)
         del future
 
