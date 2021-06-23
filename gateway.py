@@ -23,8 +23,17 @@ async def mqtt_receive_report(mqtt_client: asyncio_mqtt.Client):
 @routes.get('/{device_id}/app/command')
 async def process_request(request: str) -> web.Response:
     logging.info(f'Received request: {request}')
-    ...
-    return web.Response()
+    app = request.app
+
+    if device_id not in app['requests']:
+        command_topic = f'system/{device_id}/app/command'
+        future = asyncio.Future()
+        app['requests'][device_id] = future
+        await app['mqtt_client'].publish(command_topic, payload=request.encode())
+        result = await asyncio.wait(future)
+        del future
+
+    return web.Response(text=result)
 
 
 async def init():
@@ -52,10 +61,10 @@ async def init():
                             datefmt='%Y-%m-%d %H:%M:%S',
                             filename=log_file_name)
 
-    mqtt_client = await mqtt_connect(mqtt_address)
     app = web.Application()
+    app['mqtt_client'] = await mqtt_connect(mqtt_address)
     app.add_routes(routes)
-    loop.create_task(mqtt_receive_report(mqtt_client))
+    loop.create_task(mqtt_receive_report(app['mqtt_client'].mqtt_client))
     logging.info('Gateway has started')
 
 if __name__ == '__main__':
